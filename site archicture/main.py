@@ -11,17 +11,25 @@ Future-ready for:
 
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
-
+import sys
 
 BASE_DIR = Path(__file__).resolve().parent
-
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 def load_plugins():
     # Load all plugin files
 
     plugins = []
 
-    for file in BASE_DIR.glob("*.py"):
+    python_files = list(BASE_DIR.glob("*.py"))
+
+    metrics_dir = BASE_DIR / "metrics"
+
+    if metrics_dir.exists():
+        python_files.extend(metrics_dir.glob("*.py"))
+
+    for file in python_files:
 
         # Skip main.py
         if file.name == Path(__file__).name:
@@ -35,7 +43,7 @@ def load_plugins():
 
             spec = spec_from_file_location(
                 file.stem,
-                file
+                str(file)
             )
 
             module = module_from_spec(spec)
