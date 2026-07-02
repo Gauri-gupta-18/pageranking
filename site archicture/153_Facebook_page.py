@@ -45,21 +45,25 @@ def check_facebook_page(context):
         # Decide final status based on detection
         if fb_found:
             status = "Found"
+            score = 100
         else:
             status = "Not Found"
+            score = 0
 
     except Exception as e:
         # Handle errors like network failure or invalid URL
         return {
             "factor": "Facebook Presence",
             "status": "Error",
+            "score": 0,
             "error": str(e)
         }
 
     # Return final result to main system
     return {
         "factor": "Facebook Presence",
-        "status": status
+        "status": status,
+        "score": score
     }
 
 
@@ -85,6 +89,7 @@ if __name__ == "__main__":
     print("\n========== RESULT ==========")
     print(f"Factor : {result['factor']}")
     print(f"Status : {result['status']}")
+    print(f"Score  : {result['score']}")
 
     # Print error only if something went wrong
     if "error" in result:
