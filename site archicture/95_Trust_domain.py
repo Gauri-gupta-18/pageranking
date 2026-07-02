@@ -30,6 +30,7 @@ def check_domain_trust(source):
         "ssl_valid": False,
         "security_headers": {},
         "trust_score": 0,
+        "seo_score": 0,
         "status": "Failed"
     }
 
@@ -108,25 +109,40 @@ def check_domain_trust(source):
                 result["security_headers"][header] = False
 
         # -----------------------------
+        # SEO Score
+        # -----------------------------
+        result["seo_score"] = result["trust_score"]
+
+        # -----------------------------
         # Trust Evaluation
         # -----------------------------
-        if result["trust_score"] >= 80:
+        if result["seo_score"] >= 90:
 
-            result["status"] = "High Trust"
+            result["status"] = "Excellent"
 
-        elif result["trust_score"] >= 50:
+        elif result["seo_score"] >= 70:
 
-            result["status"] = "Medium Trust"
+            result["status"] = "Good"
+
+        elif result["seo_score"] >= 50:
+
+            result["status"] = "Average"
+
+        elif result["seo_score"] > 0:
+
+            result["status"] = "Poor"
 
         else:
 
-            result["status"] = "Low Trust"
+            result["status"] = "Failed"
 
         return result
 
     except requests.exceptions.RequestException as error:
 
         result["error"] = str(error)
+
+        result["status"] = "Error"
 
         return result
 

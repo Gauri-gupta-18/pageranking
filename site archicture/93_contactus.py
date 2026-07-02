@@ -1,3 +1,4 @@
+                                                                       # nitin
 """
 Factor 94: Contact Us Page Availability
 
@@ -23,6 +24,7 @@ def check_contact_page(context):
         "phone_found": False,
         "contact_form_found": False,
         "address_found": False,
+        "seo_score": 0,
         "status": "Failed"
     }
 
@@ -86,9 +88,14 @@ def check_contact_page(context):
         # Search email
         page_text = soup.get_text(" ")
 
-        email_pattern = r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
+        email_pattern = (
+            r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
+        )
 
-        if re.search(email_pattern, page_text):
+        if re.search(
+            email_pattern,
+            page_text
+        ):
             result["email_found"] = True
 
         # Search phone number
@@ -96,7 +103,10 @@ def check_contact_page(context):
             r"(\+?\d[\d\s\-\(\)]{7,}\d)"
         )
 
-        if re.search(phone_pattern, page_text):
+        if re.search(
+            phone_pattern,
+            page_text
+        ):
             result["phone_found"] = True
 
         # Search contact form
@@ -117,17 +127,49 @@ def check_contact_page(context):
         ):
             result["address_found"] = True
 
-        # Final status
-        if (
-            result["contact_page_found"]
-            or result["email_found"]
-            or result["phone_found"]
-        ):
-            result["status"] = "Success"
+        # ==========================
+        # Calculate SEO Score
+        # ==========================
+        score = 0
+
+        if result["contact_page_found"]:
+            score += 30
+
+        if result["email_found"]:
+            score += 20
+
+        if result["phone_found"]:
+            score += 20
+
+        if result["contact_form_found"]:
+            score += 15
+
+        if result["address_found"]:
+            score += 15
+
+        result["seo_score"] = score
+
+        # Final Status
+        if score >= 90:
+            result["status"] = "Excellent"
+
+        elif score >= 70:
+            result["status"] = "Good"
+
+        elif score >= 50:
+            result["status"] = "Average"
+
+        elif score > 0:
+            result["status"] = "Poor"
+
+        else:
+            result["status"] = "Failed"
 
     except requests.exceptions.RequestException as error:
 
         result["error"] = str(error)
+
+        result["status"] = "Error"
 
     return result
 
@@ -141,4 +183,3 @@ if __name__ == "__main__":
     report = check_contact_page(context)
 
     print(report)
-    # nitin

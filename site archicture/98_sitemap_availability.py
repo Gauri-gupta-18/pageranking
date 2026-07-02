@@ -1,4 +1,3 @@
-# 
 """
 Factor 98: Presence of Sitemap
 
@@ -30,10 +29,12 @@ def check_sitemap_availability(url):
         "html_sitemap_found": False,
         "xml_sitemap_url": None,
         "html_sitemap_url": None,
+        "seo_score": 0,
         "status": "Failed"
     }
 
     try:
+
         # Remove extra slash problems
         base_url = url.rstrip("/")
 
@@ -57,11 +58,17 @@ def check_sitemap_availability(url):
             )
 
             if response.status_code == 200:
-                if "xml" in response.text.lower() or "urlset" in response.text.lower():
-                    result["xml_sitemap_found"] = True
-                    result["xml_sitemap_url"] = sitemap_url
-                    break
 
+                if (
+                    "xml" in response.text.lower()
+                    or "urlset" in response.text.lower()
+                ):
+
+                    result["xml_sitemap_found"] = True
+
+                    result["xml_sitemap_url"] = sitemap_url
+
+                    break
 
         # -----------------------------
         # Check robots.txt for sitemap
@@ -84,15 +91,19 @@ def check_sitemap_availability(url):
 
                     if line.lower().startswith("sitemap:"):
 
-                        sitemap_url = line.split(":", 1)[1].strip()
+                        sitemap_url = line.split(
+                            ":",
+                            1
+                        )[1].strip()
 
                         result["xml_sitemap_found"] = True
+
                         result["xml_sitemap_url"] = sitemap_url
+
                         break
 
-
         # -----------------------------
-        # Check HTML sitemap
+        # Check HTML Sitemap
         # -----------------------------
         response = requests.get(
             base_url,
@@ -102,16 +113,29 @@ def check_sitemap_availability(url):
 
         if response.status_code == 200:
 
-            soup = BeautifulSoup(response.text, "html.parser")
+            soup = BeautifulSoup(
+                response.text,
+                "html.parser"
+            )
 
-            links = soup.find_all("a", href=True)
+            links = soup.find_all(
+                "a",
+                href=True
+            )
 
             for link in links:
 
-                text = link.get_text(strip=True).lower()
+                text = link.get_text(
+                    strip=True
+                ).lower()
+
                 href = link["href"].lower()
 
-                if "sitemap" in text or "sitemap" in href or "site map" in text:
+                if (
+                    "sitemap" in text
+                    or "sitemap" in href
+                    or "site map" in text
+                ):
 
                     result["html_sitemap_found"] = True
 
@@ -122,21 +146,49 @@ def check_sitemap_availability(url):
 
                     break
 
+        # -----------------------------
+        # SEO Score
+        # -----------------------------
+        score = 0
 
-        # Final result
-        if result["xml_sitemap_found"] or result["html_sitemap_found"]:
+        if result["xml_sitemap_found"]:
+            score += 70
 
-            result["status"] = "Success"
+        if result["html_sitemap_found"]:
+            score += 30
+
+        result["seo_score"] = score
+
+        # -----------------------------
+        # Final Status
+        # -----------------------------
+        if score >= 90:
+
+            result["status"] = "Excellent"
+
+        elif score >= 70:
+
+            result["status"] = "Good"
+
+        elif score >= 50:
+
+            result["status"] = "Average"
+
+        elif score > 0:
+
+            result["status"] = "Poor"
 
         else:
 
-            result["message"] = "No sitemap found"
+            result["status"] = "Failed"
 
+            result["message"] = "No sitemap found"
 
     except requests.exceptions.RequestException as error:
 
         result["error"] = str(error)
 
+        result["status"] = "Error"
 
     return result
 
@@ -155,7 +207,9 @@ if __name__ == "__main__":
 
         print("\nChecking:", website)
 
-        report = check_sitemap_availability(website)
+        report = check_sitemap_availability(
+            website
+        )
 
         print(report)
         # nitin

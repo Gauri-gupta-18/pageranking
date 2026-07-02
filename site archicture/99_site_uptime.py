@@ -18,6 +18,7 @@ def check_site_uptime(context):
         "website_available": False,
         "status_code": None,
         "response_time_ms": None,
+        "seo_score": 0,
         "uptime_status": "Unknown",
         "status": "Failed"
     }
@@ -53,32 +54,87 @@ def check_site_uptime(context):
 
             result["website_available"] = True
 
-            if response_time < 1000:
+            # -----------------------------
+            # SEO Score
+            # -----------------------------
+            if response_time < 500:
+
                 result["uptime_status"] = "Excellent"
 
-            elif response_time < 3000:
+                result["seo_score"] = 100
+
+            elif response_time < 1000:
+
                 result["uptime_status"] = "Good"
 
+                result["seo_score"] = 85
+
+            elif response_time < 3000:
+
+                result["uptime_status"] = "Average"
+
+                result["seo_score"] = 65
+
             else:
+
                 result["uptime_status"] = "Slow"
 
-            result["status"] = "Success"
+                result["seo_score"] = 40
 
         else:
 
             result["uptime_status"] = "Website Down"
 
+            result["seo_score"] = 0
+
+        # -----------------------------
+        # Final Status
+        # -----------------------------
+        score = result["seo_score"]
+
+        if score >= 90:
+
+            result["status"] = "Excellent"
+
+        elif score >= 70:
+
+            result["status"] = "Good"
+
+        elif score >= 50:
+
+            result["status"] = "Average"
+
+        elif score > 0:
+
+            result["status"] = "Poor"
+
+        else:
+
+            result["status"] = "Failed"
+
     except requests.exceptions.Timeout:
 
         result["uptime_status"] = "Request Timeout"
+
+        result["seo_score"] = 0
+
+        result["status"] = "Failed"
 
     except requests.exceptions.ConnectionError:
 
         result["uptime_status"] = "Connection Failed"
 
+        result["seo_score"] = 0
+
+        result["status"] = "Failed"
+
     except requests.exceptions.RequestException as error:
 
         result["error"] = str(error)
+
+        result["seo_score"] = 0
+
+        result["status"] = "Error"
 
     return result
 

@@ -16,6 +16,7 @@ def check_site_updates(url):
         "factor": "97 - Site Updates",
         "last_modified": None,
         "recent_dates_found": [],
+        "seo_score": 0,
         "update_status": "Unknown",
         "status": "Failed"
     }
@@ -72,22 +73,65 @@ def check_site_updates(url):
 
         # Check freshness
         if str(current_year) in years:
+
             result["update_status"] = "Recently Updated"
 
+            result["seo_score"] = 100
+
         elif str(current_year - 1) in years:
+
             result["update_status"] = "Possibly Updated"
 
+            result["seo_score"] = 80
+
+        elif str(current_year - 2) in years:
+
+            result["update_status"] = "Updated Within Two Years"
+
+            result["seo_score"] = 60
+
+        elif years:
+
+            result["update_status"] = "Old Content"
+
+            result["seo_score"] = 40
+
         else:
+
             result["update_status"] = "No Recent Updates Found"
 
-        # Mark success
-        result["status"] = "Success"
+            result["seo_score"] = 20
+
+        # Final Status
+        score = result["seo_score"]
+
+        if score >= 90:
+
+            result["status"] = "Excellent"
+
+        elif score >= 70:
+
+            result["status"] = "Good"
+
+        elif score >= 50:
+
+            result["status"] = "Average"
+
+        elif score > 0:
+
+            result["status"] = "Poor"
+
+        else:
+
+            result["status"] = "Failed"
 
         return result
 
     except requests.exceptions.RequestException as error:
 
         result["error"] = str(error)
+
+        result["status"] = "Error"
 
         return result
 
