@@ -1,0 +1,73 @@
+"""
+Factor 35: Date Published & Modified
+
+Checks whether the page provides publication
+and modification dates in JSON-LD.
+"""
+
+import requests
+import json
+from bs4 import BeautifulSoup
+
+
+def check_date_schema(context):
+
+    url=context["url"]
+
+    result={
+
+        "factor":"35 - Date Published & Modified",
+        "date_published":None,
+        "date_modified":None,
+        "status":"Failed"
+
+    }
+
+    try:
+
+        response=requests.get(
+            url,
+            headers={"User-Agent":"Mozilla/5.0"},
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        soup=BeautifulSoup(response.text,"html.parser")
+
+        scripts=soup.find_all("script",type="application/ld+json")
+
+        for script in scripts:
+
+            if not script.string:
+                continue
+
+            try:
+                data=json.loads(script.string)
+            except:
+                continue
+
+            if not isinstance(data,list):
+                data=[data]
+
+            for item in data:
+
+                if item.get("datePublished"):
+
+                    result["date_published"]=item.get("datePublished")
+
+                if item.get("dateModified"):
+
+                    result["date_modified"]=item.get("dateModified")
+
+        if result["date_published"] or result["date_modified"]:
+
+            result["status"]="Success"
+
+        return result
+
+    except Exception as error:
+
+        result["error"]=str(error)
+
+        return result

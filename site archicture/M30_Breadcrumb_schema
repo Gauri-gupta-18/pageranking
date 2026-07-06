@@ -1,0 +1,72 @@
+"""
+Factor 30: Breadcrumb Schema
+
+Checks whether the webpage contains BreadcrumbList Schema.
+"""
+
+import requests
+import json
+from bs4 import BeautifulSoup
+
+
+def check_breadcrumb_schema(context):
+
+    url = context["url"]
+
+    result = {
+        "factor": "30 - Breadcrumb Schema",
+        "breadcrumb_found": False,
+        "total_items": 0,
+        "status": "Failed"
+    }
+
+    try:
+
+        response = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        scripts = soup.find_all(
+            "script",
+            type="application/ld+json"
+        )
+
+        for script in scripts:
+
+            if not script.string:
+                continue
+
+            try:
+                data = json.loads(script.string)
+            except:
+                continue
+
+            if not isinstance(data, list):
+                data = [data]
+
+            for item in data:
+
+                if item.get("@type") == "BreadcrumbList":
+
+                    result["breadcrumb_found"] = True
+
+                    items = item.get("itemListElement", [])
+
+                    result["total_items"] = len(items)
+
+        if result["breadcrumb_found"]:
+            result["status"] = "Success"
+
+        return result
+
+    except Exception as error:
+
+        result["error"] = str(error)
+
+        return result

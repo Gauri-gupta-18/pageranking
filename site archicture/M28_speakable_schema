@@ -1,0 +1,75 @@
+"""
+Factor 28: Speakable Schema
+
+Checks whether Speakable schema exists.
+"""
+
+import requests
+import json
+from bs4 import BeautifulSoup
+
+
+def check_speakable_schema(context):
+
+    url = context["url"]
+
+    result = {
+        "factor": "28 - Speakable Schema",
+        "speakable_found": False,
+        "css_selectors": [],
+        "status": "Failed"
+    }
+
+    try:
+
+        response = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        scripts = soup.find_all(
+            "script",
+            type="application/ld+json"
+        )
+
+        for script in scripts:
+
+            if not script.string:
+                continue
+
+            try:
+                data = json.loads(script.string)
+            except:
+                continue
+
+            if not isinstance(data, list):
+                data = [data]
+
+            for item in data:
+
+                if item.get("@type") == "SpeakableSpecification":
+
+                    result["speakable_found"] = True
+
+                    selectors = item.get("cssSelector", [])
+
+                    if isinstance(selectors, str):
+                        selectors = [selectors]
+
+                    result["css_selectors"] = selectors
+
+        if result["speakable_found"]:
+            result["status"] = "Success"
+
+        return result
+
+    except Exception as error:
+
+        result["error"] = str(error)
+
+        return result
